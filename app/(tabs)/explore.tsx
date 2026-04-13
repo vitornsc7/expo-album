@@ -1,112 +1,173 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import React from 'react';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+export default function NewPostScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
-export default function TabTwoScreen() {
+  const bgColor = isDark ? '#000000' : '#fafafa';
+  const headerBg = isDark ? '#000000' : '#ffffff';
+  const headerBorder = isDark ? '#222222' : '#dbdbdb';
+  const headerText = isDark ? '#ffffff' : '#000000';
+  const cardBg = isDark ? '#1e1e1e' : '#ffffff';
+  const cardBorder = isDark ? '#2c2c2c' : '#efefef';
+  const textColor = isDark ? '#f0f0f0' : '#111111';
+  const subColor = isDark ? '#888888' : '#8e8e8e';
+  const iconBg = isDark ? '#2c2c2c' : '#f0f0f0';
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
+    <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: headerBg, borderBottomColor: headerBorder }]}>
+        <Text style={[styles.headerTitle, { color: headerText }]}>Novo Post</Text>
+      </View>
+
+      {/* Content */}
+      <View style={styles.content}>
+        <Text style={[styles.sectionLabel, { color: subColor }]}>
+          Monte seu feed
+        </Text>
+
+        <TextInput
+          style={[styles.input, { backgroundColor: cardBg, borderColor: cardBorder }]}
+          placeholder="Adicione uma descrição..."
+          placeholderTextColor={subColor}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+
+        {/* Import from gallery */}
+        <TouchableOpacity
+          style={[styles.optionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.iconBox, { backgroundColor: iconBg }]}>
+            <Text style={styles.iconEmoji}>🖼️</Text>
+          </View>
+          <View style={styles.optionInfo}>
+            <Text style={[styles.optionTitle, { color: textColor }]}>Importar da galeria</Text>
+            <Text style={[styles.optionSubtitle, { color: subColor }]}>
+              Escolha uma foto do seu dispositivo
+            </Text>
+          </View>
+          <Text style={[styles.chevron, { color: subColor }]}>›</Text>
+        </TouchableOpacity>
+
+        {/* Take photo */}
+        <TouchableOpacity
+          style={[styles.optionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.iconBox, { backgroundColor: iconBg }]}>
+            <Text style={styles.iconEmoji}>📷</Text>
+          </View>
+          <View style={styles.optionInfo}>
+            <Text style={[styles.optionTitle, { color: textColor }]}>Tirar foto</Text>
+            <Text style={[styles.optionSubtitle, { color: subColor }]}>
+              Use a câmera para capturar um momento
+            </Text>
+          </View>
+          <Text style={[styles.chevron, { color: subColor }]}>›</Text>
+        </TouchableOpacity>
+
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
+          <View>
+            <Text>Imagem carregada</Text>
+          </View>
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#ffffff',
+              borderColor: '#dbdbdb',
+              borderWidth: 0.5,
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+              borderRadius: 8,
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={{ color: '#000000', fontSize: 14 }}>Publicar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
   },
-  titleContainer: {
+  header: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 0.5,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 28,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 14,
+  },
+  optionCard: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 0.5,
+    padding: 16,
+    marginBottom: 12,
+  },
+  iconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconEmoji: {
+    fontSize: 26,
+  },
+  optionInfo: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  optionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 3,
+  },
+  optionSubtitle: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  chevron: {
+    fontSize: 24,
+    fontWeight: '300',
+    marginLeft: 8,
+  },
+  input: {
+    borderWidth: 0.5,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 10,
   },
 });
