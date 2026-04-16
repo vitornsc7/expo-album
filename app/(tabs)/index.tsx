@@ -2,11 +2,11 @@ import React from 'react';
 import {
   Image,
   FlatList,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFeed } from '@/contexts/feed-context';
 
 function PostCard({ imageUri, description }: { imageUri: string; description: string }) {
@@ -20,8 +20,7 @@ function PostCard({ imageUri, description }: { imageUri: string; description: st
 }
 
 export default function FeedScreen() {
-  const { post } = useFeed();
-  const data = post ? [post] : [];
+  const { posts } = useFeed();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -29,8 +28,8 @@ export default function FeedScreen() {
         <Text style={styles.headerTitle}>Feed</Text>
       </View>
       <FlatList
-        data={data}
-        keyExtractor={(_, index) => `${index}`}
+        data={posts}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => <PostCard imageUri={item.imageUri} description={item.description} />}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}

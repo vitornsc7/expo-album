@@ -4,7 +4,6 @@ import { Camera, ChevronRight, ImagePlus } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -12,11 +11,12 @@ import {
   View,
 } from 'react-native';
 
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFeed } from '@/contexts/feed-context';
 
 export default function NewPostScreen() {
   const router = useRouter();
-  const { setPost } = useFeed();
+  const { addPost } = useFeed();
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
 
@@ -26,9 +26,17 @@ export default function NewPostScreen() {
   );
 
   async function pickFromGallery() {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert('Permissão necessária', 'Autorize o acesso à galeria para selecionar uma foto.');
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
+      aspect: [4, 3],
       quality: 1,
     });
 
@@ -37,22 +45,8 @@ export default function NewPostScreen() {
     }
   }
 
-  async function takePhoto() {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-
-    if (!permission.granted) {
-      Alert.alert('Permissão necessária', 'Autorize a câmera para tirar uma foto.');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri);
-    }
+  function cameraInDevelopment() {
+    Alert.alert('Em desenvolvimento', 'A funcionalidade de câmera será implementada em outra etapa.');
   }
 
   function publish() {
@@ -60,7 +54,8 @@ export default function NewPostScreen() {
       return;
     }
 
-    setPost({
+    addPost({
+      id: `${Date.now()}`,
       description: description.trim(),
       imageUri,
     });
@@ -101,7 +96,7 @@ export default function NewPostScreen() {
             <ChevronRight size={24} color="#94a3b8" strokeWidth={2.4} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.optionCard} onPress={takePhoto} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.optionCard} onPress={cameraInDevelopment} activeOpacity={0.8}>
             <View style={[styles.iconBox, { backgroundColor: '#f3e8ff' }]}>
               <Camera size={24} color="#9333ea" strokeWidth={2.2} />
             </View>

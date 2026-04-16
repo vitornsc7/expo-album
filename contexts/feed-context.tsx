@@ -1,20 +1,26 @@
 import React, { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 
 export type FeedPost = {
+  id: string;
   description: string;
   imageUri: string;
 };
 
 type FeedContextValue = {
-  post: FeedPost | null;
-  setPost: (next: FeedPost | null) => void;
+  posts: FeedPost[];
+  addPost: (next: FeedPost) => void;
 };
 
 const FeedContext = createContext<FeedContextValue | undefined>(undefined);
 
 export function FeedProvider({ children }: { children: ReactNode }) {
-  const [post, setPost] = useState<FeedPost | null>(null);
-  const value = useMemo(() => ({ post, setPost }), [post]);
+  const [posts, setPosts] = useState<FeedPost[]>([]);
+
+  function addPost(next: FeedPost) {
+    setPosts((prev) => [next, ...prev]);
+  }
+
+  const value = useMemo(() => ({ posts, addPost }), [posts]);
 
   return <FeedContext.Provider value={value}>{children}</FeedContext.Provider>;
 }
