@@ -1,69 +1,44 @@
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import React from 'react';
 import {
+  Image,
   FlatList,
   SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { useFeed } from '@/contexts/feed-context';
 
-const POSTS = [
-  {
-    id: '1',
-    text: 'Primeiro post',
-  },
-  {
-    id: '2',
-    text: 'Caverna',
-  },
-  {
-    id: '3',
-    text: 'Natureza',
-  },
-  {
-    id: '4',
-    text: 'Volta na cidade',
-  },
-  {
-    id: '5',
-    text: 'Novo projeto',
-  },
-];
-
-type Post = (typeof POSTS)[number];
-
-function PostCard({ post, isDark }: { post: Post; isDark: boolean }) {
-  const bg = isDark ? '#1e1e1e' : '#ffffff';
-  const border = isDark ? '#2c2c2c' : '#efefef';
-  const textColor = isDark ? '#f0f0f0' : '#111111';
-  const subColor = isDark ? '#888888' : '#8e8e8e';
+function PostCard({ imageUri, description }: { imageUri: string; description: string }) {
 
   return (
-    <View style={[styles.card, { backgroundColor: bg, borderColor: border }]}>
-      <View>
-        <Text style={[styles.postText, { color: textColor }]}>{post.text}</Text>
-      </View>
+    <View style={styles.card}>
+      <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
+      <Text style={styles.postText}>{description}</Text>
     </View>
   );
 }
 
 export default function FeedScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const bgColor = isDark ? '#000000' : '#fafafa';
-  const headerBg = isDark ? '#000000' : '#ffffff';
-  const headerBorder = isDark ? '#222222' : '#dbdbdb';
-  const headerText = isDark ? '#ffffff' : '#000000';
+  const { post } = useFeed();
+  const data = post ? [post] : [];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Feed</Text>
+      </View>
       <FlatList
-        data={POSTS}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PostCard post={item} isDark={isDark} />}
+        data={data}
+        keyExtractor={(_, index) => `${index}`}
+        renderItem={({ item }) => <PostCard imageUri={item.imageUri} description={item.description} />}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>Nenhum post publicado ainda.</Text>
+          </View>
+        }
       />
     </SafeAreaView>
   );
@@ -72,22 +47,52 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f3f4f6',
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  headerTitle: {
+    color: '#0f172a',
+    fontSize: 34,
+    fontWeight: '700',
+    letterSpacing: -1,
   },
   list: {
-    paddingTop: 8,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   card: {
-    marginHorizontal: 12,
-    marginVertical: 6,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 0.5,
+    marginHorizontal: 10,
+    marginVertical: 8,
+    borderRadius: 18,
+    backgroundColor: '#ffffff',
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  image: {
+    width: '100%',
+    height: 260,
+    backgroundColor: '#e5e7eb',
   },
   postText: {
-    fontSize: 15,
-    lineHeight: 22,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    fontSize: 16,
+    lineHeight: 28,
+    color: '#334155',
+  },
+  emptyState: {
+    marginTop: 36,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#64748b',
+    fontSize: 18,
   },
 });
