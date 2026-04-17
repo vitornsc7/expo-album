@@ -1,97 +1,122 @@
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import React from 'react';
+import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { Camera, ChevronRight, ImagePlus } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
 import {
-  SafeAreaView,
+  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 
-export default function NewPostScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFeed } from '@/contexts/feed-context';
 
-  const bgColor = isDark ? '#000000' : '#fafafa';
-  const headerBg = isDark ? '#000000' : '#ffffff';
-  const headerBorder = isDark ? '#222222' : '#dbdbdb';
-  const headerText = isDark ? '#ffffff' : '#000000';
-  const cardBg = isDark ? '#1e1e1e' : '#ffffff';
-  const cardBorder = isDark ? '#2c2c2c' : '#efefef';
-  const textColor = isDark ? '#f0f0f0' : '#111111';
-  const subColor = isDark ? '#888888' : '#8e8e8e';
-  const iconBg = isDark ? '#2c2c2c' : '#f0f0f0';
+export default function NewPostScreen() {
+  const router = useRouter();
+  const { addPost } = useFeed();
+  const [description, setDescription] = useState('');
+  const [imageUri, setImageUri] = useState<string | null>(null);
+
+  const canPublish = useMemo(
+    () => description.trim().length > 0 && Boolean(imageUri),
+    [description, imageUri]
+  );
+
+  async function pickFromGallery() {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert('Permissão necessária', 'Autorize o acesso à galeria para selecionar uma foto.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setImageUri(result.assets[0].uri);
+    }
+  }
+
+  function cameraInDevelopment() {
+    Alert.alert('Em desenvolvimento', 'A funcionalidade de câmera será implementada em outra etapa.');
+  }
+
+  function publish() {
+    if (!canPublish || !imageUri) {
+      return;
+    }
+
+    addPost({
+      id: `${Date.now()}`,
+      description: description.trim(),
+      imageUri,
+    });
+
+    setDescription('');
+    setImageUri(null);
+    router.navigate('/(tabs)');
+  }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: headerBg, borderBottomColor: headerBorder }]}>
-        <Text style={[styles.headerTitle, { color: headerText }]}>Novo Post</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Novo Post</Text>
       </View>
 
-      {/* Content */}
       <View style={styles.content}>
-        <Text style={[styles.sectionLabel, { color: subColor }]}>
-          Monte seu feed
-        </Text>
+        <View style={styles.panel}>
+          <Text style={styles.sectionLabel}>MONTE SEU FEED</Text>
 
-        <TextInput
-          style={[styles.input, { backgroundColor: cardBg, borderColor: cardBorder }]}
-          placeholder="Adicione uma descrição..."
-          placeholderTextColor={subColor}
-        />
+          <TextInput
+            value={description}
+            onChangeText={setDescription}
+            style={styles.input}
+            placeholder="Adicione uma descrição..."
+            placeholderTextColor="#94a3b8"
+            multiline
+            textAlignVertical="top"
+          />
 
-        {/* Import from gallery */}
-        <TouchableOpacity
-          style={[styles.optionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.iconBox, { backgroundColor: iconBg }]}>
-            <Text style={styles.iconEmoji}>🖼️</Text>
-          </View>
-          <View style={styles.optionInfo}>
-            <Text style={[styles.optionTitle, { color: textColor }]}>Importar da galeria</Text>
-            <Text style={[styles.optionSubtitle, { color: subColor }]}>
-              Escolha uma foto do seu dispositivo
-            </Text>
-          </View>
-          <Text style={[styles.chevron, { color: subColor }]}>›</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.optionCard} onPress={pickFromGallery} activeOpacity={0.8}>
+            <View style={[styles.iconBox, { backgroundColor: '#dbeafe' }]}>
+              <ImagePlus size={24} color="#2563eb" strokeWidth={2.2} />
+            </View>
+            <View style={styles.optionInfo}>
+              <Text style={styles.optionTitle}>Importar da galeria</Text>
+              <Text style={styles.optionSubtitle}>Escolha uma foto do seu dispositivo</Text>
+            </View>
+            <ChevronRight size={24} color="#94a3b8" strokeWidth={2.4} />
+          </TouchableOpacity>
 
-        {/* Take photo */}
-        <TouchableOpacity
-          style={[styles.optionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.iconBox, { backgroundColor: iconBg }]}>
-            <Text style={styles.iconEmoji}>📷</Text>
-          </View>
-          <View style={styles.optionInfo}>
-            <Text style={[styles.optionTitle, { color: textColor }]}>Tirar foto</Text>
-            <Text style={[styles.optionSubtitle, { color: subColor }]}>
-              Use a câmera para capturar um momento
-            </Text>
-          </View>
-          <Text style={[styles.chevron, { color: subColor }]}>›</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.optionCard} onPress={cameraInDevelopment} activeOpacity={0.8}>
+            <View style={[styles.iconBox, { backgroundColor: '#f3e8ff' }]}>
+              <Camera size={24} color="#9333ea" strokeWidth={2.2} />
+            </View>
+            <View style={styles.optionInfo}>
+              <Text style={styles.optionTitle}>Tirar foto</Text>
+              <Text style={styles.optionSubtitle}>Use a câmera para capturar um momento</Text>
+            </View>
+            <ChevronRight size={24} color="#94a3b8" strokeWidth={2.4} />
+          </TouchableOpacity>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
-          <View>
-            <Text>Imagem carregada</Text>
-          </View>
+          <Text style={styles.imageStatus}>
+            {imageUri ? 'Imagem carregada' : 'Nenhuma imagem selecionada'}
+          </Text>
+
           <TouchableOpacity
-            style={{
-              backgroundColor: '#ffffff',
-              borderColor: '#dbdbdb',
-              borderWidth: 0.5,
-              paddingVertical: 10,
-              paddingHorizontal: 20,
-              borderRadius: 8,
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={{ color: '#000000', fontSize: 14 }}>Publicar</Text>
+            style={[styles.publishButton, !canPublish && styles.publishButtonDisabled]}
+            onPress={publish}
+            disabled={!canPublish}
+            activeOpacity={0.9}>
+            <Text style={styles.publishText}>Publicar</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -102,72 +127,103 @@ export default function NewPostScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8fafc',
   },
   header: {
-    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 0.5,
+    paddingVertical: 12,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 34,
     fontWeight: '700',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
+    color: '#020617',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 28,
+    padding: 10,
+  },
+  panel: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 2,
+    padding: 18,
   },
   sectionLabel: {
-    fontSize: 13,
+    color: '#475569',
+    fontSize: 18,
     fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 14,
+    letterSpacing: 1.3,
+    marginBottom: 16,
+  },
+  input: {
+    height: 140,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    fontSize: 18,
+    color: '#334155',
+    marginBottom: 18,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
-    borderWidth: 0.5,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 16,
+    marginBottom: 14,
   },
   iconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconEmoji: {
-    fontSize: 26,
   },
   optionInfo: {
     flex: 1,
     marginLeft: 14,
   },
   optionTitle: {
-    fontSize: 16,
+    color: '#0f172a',
+    fontSize: 20,
     fontWeight: '600',
-    marginBottom: 3,
   },
   optionSubtitle: {
+    color: '#64748b',
     fontSize: 13,
-    lineHeight: 18,
+    marginTop: 2,
   },
-  chevron: {
-    fontSize: 24,
-    fontWeight: '300',
-    marginLeft: 8,
+  imageStatus: {
+    color: '#64748b',
+    fontSize: 16,
+    marginTop: 4,
   },
-  input: {
-    borderWidth: 0.5,
+  publishButton: {
+    marginTop: 18,
+    backgroundColor: '#3b82f6',
     borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 10,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  publishButtonDisabled: {
+    backgroundColor: '#d1d5db',
+  },
+  publishText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

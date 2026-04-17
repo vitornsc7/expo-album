@@ -1,4 +1,4 @@
-# Welcome to your Expo app 👋
+﻿# Welcome to your Expo app
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
@@ -48,3 +48,39 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Image Picker no projeto
+
+Esta base já está com `expo-image-picker` integrado para publicar foto no feed pela aba **Novo Post**.
+
+### Configuração
+
+No `app.json`, o plugin está em `expo.plugins` com:
+- `photosPermission`
+- `cropToolbarColor` (claro/escuro)
+
+### Fluxo implementado
+
+Arquivo: `app/(tabs)/explore.tsx`
+
+1. Toque em **Importar da galeria**.
+2. O app solicita permissão via `ImagePicker.requestMediaLibraryPermissionsAsync()`.
+3. Se negar, mostra `Alert` e interrompe.
+4. Se permitir, abre `launchImageLibraryAsync()` com:
+   - `mediaTypes: ['images']`
+   - `allowsEditing: true`
+   - `aspect: [4, 3]`
+   - `quality: 1`
+5. Com seleção confirmada (`!result.canceled`), salva `result.assets[0].uri`.
+6. **Publicar** só habilita com descrição + imagem.
+7. Ao publicar, o post é inserido no topo do feed.
+
+### Feed
+
+- `contexts/feed-context.tsx`: mantém `posts[]` e usa `addPost(next)` para inserir no topo (`[next, ...prev]`).
+- `app/(tabs)/index.tsx`: renderiza a lista com imagem e descrição.
+
+### Observação
+
+A funcionalidade de câmera foi deixada separada para implementação posterior.
+
