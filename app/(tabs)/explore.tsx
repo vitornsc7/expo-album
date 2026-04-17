@@ -1,9 +1,12 @@
-import { useRouter } from 'expo-router';
+import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, ChevronRight, ImagePlus } from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { Camera, ChevronRight, FlipHorizontal, ImagePlus, X } from 'lucide-react-native';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Alert,
+  Image,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -11,14 +14,18 @@ import {
   View,
 } from 'react-native';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFeed } from '@/contexts/feed-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function NewPostScreen() {
   const router = useRouter();
   const { addPost } = useFeed();
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [facing, setFacing] = useState<CameraType>('back');
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const cameraRef = useRef<CameraView>(null);
 
   const canPublish = useMemo(
     () => description.trim().length > 0 && Boolean(imageUri),
@@ -45,8 +52,28 @@ export default function NewPostScreen() {
     }
   }
 
-  function cameraInDevelopment() {
-    Alert.alert('Em desenvolvimento', 'A funcionalidade de câmera será implementada em outra etapa.');
+  async function openCamera() {
+    if (!cameraPermission?.granted) {
+      const result = await requestCameraPermission();
+      if (!result.granted) {
+        Alert.alert('Permissão necessária', 'Autorize o acesso à câmera para tirar uma foto.');
+        return;
+      }
+    }
+    setCameraOpen(true);
+  }
+
+  async function takePicture() {
+    if (!cameraRef.current) return;
+    const photo = await cameraRef.current.takePictureAsync();
+    if (photo?.uri) {
+      setImageUri(photo.uri);
+    }
+    setCameraOpen(false);
+  }
+
+  function toggleFacing() {
+    setFacing((prev) => (prev === 'back' ? 'front' : 'back'));
   }
 
   function publish() {
@@ -96,7 +123,7 @@ export default function NewPostScreen() {
             <ChevronRight size={24} color="#94a3b8" strokeWidth={2.4} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.optionCard} onPress={cameraInDevelopment} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.optionCard} onPress={openCamera} activeOpacity={0.8}>
             <View style={[styles.iconBox, { backgroundColor: '#f3e8ff' }]}>
               <Camera size={24} color="#9333ea" strokeWidth={2.2} />
             </View>
@@ -107,9 +134,11 @@ export default function NewPostScreen() {
             <ChevronRight size={24} color="#94a3b8" strokeWidth={2.4} />
           </TouchableOpacity>
 
-          <Text style={styles.imageStatus}>
-            {imageUri ? 'Imagem carregada' : 'Nenhuma imagem selecionada'}
-          </Text>
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="cover" />
+          ) : (
+            <Text style={styles.imageStatus}>Nenhuma imagem selecionada</Text>
+          )}
 
           <TouchableOpacity
             style={[styles.publishButton, !canPublish && styles.publishButtonDisabled]}
@@ -120,6 +149,23 @@ export default function NewPostScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <Modal visible={cameraOpen} animationType="slide" onRequestClose={() => setCameraOpen(false)}>
+        <View style={styles.cameraContainer}>
+          <CameraView ref={cameraRef} style={styles.camera} facing={facing} />
+          <View style={styles.cameraControls}>
+            <TouchableOpacity style={styles.cameraActionButton} onPress={() => setCameraOpen(false)}>
+              <X size={28} color="#ffffff" strokeWidth={2.2} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
+              <View style={styles.captureButtonInner} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cameraActionButton} onPress={toggleFacing}>
+              <FlipHorizontal size={28} color="#ffffff" strokeWidth={2.2} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -210,6 +256,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 4,
   },
+  imagePreview: {
+    width: '100%',
+    height: 180,
+    borderRadius: 16,
+    marginTop: 4,
+    backgroundColor: '#e5e7eb',
+  },
   publishButton: {
     marginTop: 18,
     backgroundColor: '#3b82f6',
@@ -225,5 +278,45 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  camera: {
+    flex: 1,
+  },
+  cameraControls: {
+    position: 'absolute',
+    bottom: 48,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 40,
+  },
+  cameraActionButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  captureButton: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 4,
+    borderColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  captureButtonInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ffffff',
   },
 });
